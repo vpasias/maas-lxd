@@ -12,6 +12,10 @@ applications:
     annotations:
       "gui-x": "800"
       "gui-y": "850"
+    to:
+      - 0
+      - 1
+      - 2
   "kubeapi-load-balancer":
     charm: "kubeapi-load-balancer"
     num_units: 1
@@ -20,6 +24,8 @@ applications:
     annotations:
       "gui-x": "450"
       "gui-y": "250"
+    to:
+     - 3
   "easyrsa":
     charm: "easyrsa"
     num_units: 1
@@ -27,6 +33,8 @@ applications:
     annotations:
       "gui-x": "90"
       "gui-y": "420"
+    to:
+     - lxd:kubernetes-control-plane      
   "kubernetes-worker":
     charm: "kubernetes-worker"
     num_units: 3
@@ -37,6 +45,10 @@ applications:
     annotations:
       "gui-x": "90"
       "gui-y": "850"
+    to:
+      - 4
+      - 5
+      - 6      
   "etcd":
     charm: "etcd"
     num_units: 3
@@ -46,6 +58,10 @@ applications:
     annotations:
       "gui-x": "800"
       "gui-y": "420"
+    to:
+      - 0
+      - 1
+      - 2      
 relations:
   - - "kubernetes-control-plane:loadbalancer-external"
     - "kubeapi-load-balancer:lb-consumers"
