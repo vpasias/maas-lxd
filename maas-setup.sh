@@ -52,8 +52,7 @@ maas admin ipranges create type=dynamic start_ip=10.10.10.200 end_ip=10.10.10.25
 maas admin vlan update $FABRIC_ID $VLAN_TAG dhcp_on=True primary_rack=$PRIMARY_RACK
 maas admin maas set-config name=upstream_dns value=8.8.8.8
 # Add LXD as a VM host for MAAS and capture the VM_HOST_ID
-export VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 \
- project=maas | jq '.id')
+export VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 project=maas | jq '.id')
 
 # allow high CPU oversubscription so all VMs can use all cores
 maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
