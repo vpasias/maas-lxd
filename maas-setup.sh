@@ -66,18 +66,11 @@ maas admin tags create name=node comment='This tag should to machines that will 
 
 # add a VM for the juju controller with minimal memory
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
-sleep 60
-# get the system-id and tag the machine with "juju-controller"
-export JUJU_SYSID=$(maas admin machines read | jq  '.[] 
-| select(."hostname"=="juju-controller") 
-| .["system_id"]' | tr -d '"')
-maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 
 ## Create 3 host machines and tag them with "node"
-for ID in 1 2 3
+for ID in 1 2 3 4 5 6
 do
-    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
-    sleep 60
+    maas admin vm-host compose $VM_HOST_ID cores=8 memory=16384 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
     SYSID=$(maas admin machines read | jq -r --arg MACHINE "node-${ID}" '.[] 
     | select(."hostname"==$MACHINE) 
     | .["system_id"]' | tr -d '"')
@@ -95,40 +88,11 @@ sed -i 's/{{ maas_admin_apikey }}/'${MAAS_APIKEY}'/g' /home/ubuntu/maas-lxd/cred
 juju add-credential maas-cloud -f /home/ubuntu/maas-lxd/credentials.yaml
 juju clouds --local
 juju credentials
-# Bootstrap the maas-cloud - get a coffee
-juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 
 # fire up the juju gui to view the fun
 # if it's a remote machine, you can use an SSH tunnel to get access to it:
 # e.g. ssh ubuntu@x.x.x.x -L8080:10.10.10.2:17070
 # juju dashboard
-
-# check jujus view of machines
-juju machines 
-
-# add machines to juju from the maas cloud
-# it will grab the 3 we already created since they are in a "READY state"
-for ID in 1 2 3
-do
-    juju add-machine
-done
-
-# take a look at machines list again, should see 3 machines
-sleep 600
-juju machines
-
-### Ceph
-
-# deploy ceph-mon to LXD VMs inside our metal machines
-juju deploy -n 3 ceph-mon --to lxd:0,lxd:1,lxd:2
-# deploy ceph-osd directly to the machines
-juju deploy --config maas-lxd/ceph-osd.yaml cs:ceph-osd -n 3 --to 0,1,2
-# relate ceph-mon and ceph-osd
-juju add-relation ceph-mon ceph-osd
-
-# watch the fun (with a another coffee). 
-watch -c juju status --color
-# Wait for Ceph to settle before proceeding
 
 ### Kubernetes
 
