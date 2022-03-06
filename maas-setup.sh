@@ -104,7 +104,6 @@ juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 # juju dashboard
 
 # check jujus view of machines
-sleep 120
 juju machines 
 
 # add machines to juju from the maas cloud
@@ -115,6 +114,7 @@ do
 done
 
 # take a look at machines list again, should see 3 machines
+sleep 120
 juju machines
 
 ### Ceph
