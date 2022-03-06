@@ -114,7 +114,6 @@ done
 # take a look at machines list again, should see 3 machines
 juju machines
 
-
 ### Ceph
 
 # deploy ceph-mon to LXD VMs inside our metal machines
@@ -131,24 +130,23 @@ watch -c juju status --color
 ### Kubernetes
 
 # Deploy kubernetes-core with juju and re-use existing machines. 
-juju deploy kubernetes-core --map-machines=existing,0=0,1=1
+# juju deploy kubernetes-core --map-machines=existing,0=0,1=1
 
 # add the new kubernetes as a cloud to juju
-mkdir ~/.kube
-juju scp kubernetes-master/0:/home/ubuntu/config ~/.kube/config
+# mkdir ~/.kube && juju scp kubernetes-master/0:/home/ubuntu/config ~/.kube/config
 
 # add storage relations
-juju add-relation ceph-mon:admin kubernetes-master
-juju add-relation ceph-mon:client kubernetes-master
+# juju add-relation ceph-mon:admin kubernetes-master
+# juju add-relation ceph-mon:client kubernetes-master
 
 # add k8s to juju (choose option 1, client only)
-juju add-k8s my-k8s
+# juju add-k8s my-k8s
 
-juju bootstrap my-k8s
-juju controllers
+#juju bootstrap my-k8s
+#juju controllers
 
 # add a kubernetes-worker
-juju add-unit kubernetes-worker --to 2
+# juju add-unit kubernetes-worker --to 2
 
 ### Deploy a test application on K8s cluster
 
