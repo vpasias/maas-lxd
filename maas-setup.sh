@@ -65,7 +65,7 @@ maas admin tags create name=node comment='This tag should to machines that will 
 ### creating VMs for Juju controller and our "bare metal"
 
 # add a VM for the juju controller with minimal memory
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" \
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" \
  storage="main:16(pool1)" hostname="juju-controller"
 # get the system-id and tag the machine with "juju-controller"
 export JUJU_SYSID=$(maas admin machines read | jq  '.[] 
