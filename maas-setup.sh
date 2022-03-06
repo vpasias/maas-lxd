@@ -102,7 +102,7 @@ juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 # juju dashboard
 
 # check jujus view of machines
-watch -c -n 5 juju machines 
+watch -n 10 -c juju machines 
 
 # add machines to juju from the maas cloud
 # it will grab the 3 we already created since they are in a "READY state"
