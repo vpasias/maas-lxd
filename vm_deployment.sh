@@ -18,7 +18,7 @@ EOF
 
 virsh net-define /mnt/extra/management.xml && virsh net-autostart management && virsh net-start management && virsh net-list --all
 
-./kvm-install-vm create -c 48 -m 200704 -d 800 -t ubuntu2004 -f host-passthrough -k /root/.ssh/id_rsa.pub -l /mnt/extra/virt/images -L /mnt/extra/virt/vms -b virbr255 -T US/Eastern -M 52:54:00:8a:8b:c1 netsim
+./kvm-install-vm create -c 56 -m 327680 -d 900 -t ubuntu2004 -f host-passthrough -k /root/.ssh/id_rsa.pub -l /mnt/extra/virt/images -L /mnt/extra/virt/vms -b virbr255 -T US/Eastern -M 52:54:00:8a:8b:c1 netsim
 
 virsh list --all && brctl show && virsh net-list --all
 
