@@ -36,7 +36,7 @@ lxc network show lxdbr0
 lxd waitready
 # Initialise MAAS
 sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
-sleep 15
+sleep 60
 # Create MAAS admin and grab API key
 sudo maas createadmin --username admin --password admin --email admin
 export APIKEY=$(sudo maas apikey --username admin)
