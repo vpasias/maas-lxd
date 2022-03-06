@@ -65,9 +65,9 @@ maas admin tags create name=node comment='This tag should to machines that will 
 ### creating VMs for Juju controller and nodes
 
 # add a VM for the juju controller with minimal memory
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
+# maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
 
-## Create 3 host machines and tag them with "node"
+## Create 7 host machines and tag them with "node"
 for ID in 1 2 3 4 5 6 7
 do
     maas admin vm-host compose $VM_HOST_ID cores=8 memory=16384 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
