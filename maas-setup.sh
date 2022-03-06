@@ -65,8 +65,8 @@ maas admin tags create name=node comment='This tag should to machines that will 
 ### creating VMs for Juju controller and nodes
 
 # add a VM for the juju controller with minimal memory
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" \
- storage="main:16(pool1)" hostname="juju-controller"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
+sleep 60
 # get the system-id and tag the machine with "juju-controller"
 export JUJU_SYSID=$(maas admin machines read | jq  '.[] 
 | select(."hostname"=="juju-controller") 
@@ -76,9 +76,9 @@ maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 ## Create 3 host machines and tag them with "node"
 for ID in 1 2 3
 do
-    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" \
-     storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
-	SYSID=$(maas admin machines read | jq -r --arg MACHINE "node-${ID}" '.[] 
+    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
+    sleep 60
+    SYSID=$(maas admin machines read | jq -r --arg MACHINE "node-${ID}" '.[] 
     | select(."hostname"==$MACHINE) 
     | .["system_id"]' | tr -d '"')
     maas admin tag update-nodes "node" add=$SYSID
