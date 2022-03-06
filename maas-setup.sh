@@ -10,6 +10,7 @@ sudo snap switch --channel=latest/stable lxd
 sudo snap install lxd
 sudo snap refresh lxd
 sudo snap install jq
+sudo snap install kubectl --classic
 sudo snap install --channel=3.1/edge maas
 sudo snap install --channel=3.1/edge maas-test-db
 
