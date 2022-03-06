@@ -114,7 +114,7 @@ do
 done
 
 # take a look at machines list again, should see 3 machines
-sleep 240
+sleep 600
 juju machines
 
 ### Ceph
