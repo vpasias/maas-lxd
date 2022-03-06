@@ -90,7 +90,9 @@ cd ~
 sudo snap install juju --classic
 sed -i "s/IP_ADDRESS/$IP_ADDRESS/" maas-lxd/maas-cloud.yaml
 juju add-cloud --local maas-cloud maas-lxd/maas-cloud.yaml
-juju add-credential maas-cloud
+MAAS_APIKEY=$(sudo maas apikey --username admin)
+sed -i 's/{{ maas_admin_apikey }}/'${MAAS_APIKEY}'/g' maas-lxd/credentials.yaml
+juju add-credential maas-cloud -f maas-lxd/credentials.yaml
 juju clouds --local
 juju credentials
 # Bootstrap the maas-cloud - get a coffee
