@@ -87,3 +87,8 @@ ssh -o "StrictHostKeyChecking=no" ubuntu@netsim "sudo sed -i 's/0770/0777/' /etc
 #ssh -o "StrictHostKeyChecking=no" ubuntu@netsim "sudo systemctl set-default graphical.target"
 
 ssh -o "StrictHostKeyChecking=no" ubuntu@netsim "sudo reboot"
+
+sleep 60
+
+ssh -o "StrictHostKeyChecking=no" ubuntu@netsim "uname -a"
+ssh -o "StrictHostKeyChecking=no" ubuntu@netsim "cd ~ && git clone https://github.com/vpasias/maas-lxd.git && cd maas-lxd && chmod +x maas-setup.sh && ./maas-setup.sh"
