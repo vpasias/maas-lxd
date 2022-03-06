@@ -70,7 +70,7 @@ maas admin tags create name=node comment='This tag should to machines that will 
 ## Create 7 host machines and tag them with "node"
 for ID in 1 2 3 4 5 6 7
 do
-    maas admin vm-host compose $VM_HOST_ID cores=6 memory=16384 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
+    maas admin vm-host compose $VM_HOST_ID cores=6 memory=32768 architecture="amd64/generic" storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
     SYSID=$(maas admin machines read | jq -r --arg MACHINE "node-${ID}" '.[] 
     | select(."hostname"==$MACHINE) 
     | .["system_id"]' | tr -d '"')
