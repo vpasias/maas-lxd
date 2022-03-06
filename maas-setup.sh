@@ -30,7 +30,7 @@ echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo deb
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 sudo apt-get install iptables-persistent -y
 # LXD init
-sudo cat maas-lxd/lxd.conf | lxd init --preseed
+sudo cat /home/ubuntu/maas-lxd/lxd.conf | lxd init --preseed
 # verify LXD network config
 lxc network show lxdbr0
 # Wait for LXD to be ready
@@ -88,11 +88,11 @@ done
 ### Juju setup (note, this section requires manual intervention)
 cd ~
 sudo snap install juju --classic
-sed -i "s/IP_ADDRESS/$IP_ADDRESS/" maas-lxd/maas-cloud.yaml
-juju add-cloud --local maas-cloud maas-lxd/maas-cloud.yaml
+sed -i "s/IP_ADDRESS/$IP_ADDRESS/" /home/ubuntu/maas-lxd/maas-cloud.yaml
+juju add-cloud --local maas-cloud /home/ubuntu/maas-lxd/maas-cloud.yaml
 MAAS_APIKEY=$(sudo maas apikey --username admin)
-sed -i 's/{{ maas_admin_apikey }}/'${MAAS_APIKEY}'/g' maas-lxd/credentials.yaml
-juju add-credential maas-cloud -f maas-lxd/credentials.yaml
+sed -i 's/{{ maas_admin_apikey }}/'${MAAS_APIKEY}'/g' /home/ubuntu/maas-lxd/credentials.yaml
+juju add-credential maas-cloud -f /home/ubuntu/maas-lxd/credentials.yaml
 juju clouds --local
 juju credentials
 # Bootstrap the maas-cloud - get a coffee
