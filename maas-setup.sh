@@ -15,7 +15,7 @@ sudo snap install --channel=3.1/edge maas-test-db
 
 # clone the git repository
 cd ~
-git clone https://github.com/antongisli/maas-baremetal-k8s-tutorial.git
+git clone https://github.com/vpasias/maas-lxd.git
 
 # get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
@@ -29,7 +29,7 @@ echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo deb
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 sudo apt-get install iptables-persistent -y
 # LXD init
-sudo cat maas-baremetal-k8s-tutorial/lxd.conf | lxd init --preseed
+sudo cat maas-lxd/lxd.conf | lxd init --preseed
 # verify LXD network config
 lxc network show lxdbr0
 # Wait for LXD to be ready
@@ -60,7 +60,7 @@ maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
 
 # create tags for MAAS
 maas admin tags create name=juju-controller comment='This tag should to machines that will be used as juju controllers'
-maas admin tags create name=metal comment='This tag should to machines that will be used as bare metal'
+maas admin tags create name=node comment='This tag should to machines that will be used as hosts'
 
 ### creating VMs for Juju controller and our "bare metal"
 
@@ -73,23 +73,23 @@ export JUJU_SYSID=$(maas admin machines read | jq  '.[]
 | .["system_id"]' | tr -d '"')
 maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 
-## Create 3 "bare metal" machines and tag them with "metal"
+## Create 3 host machines and tag them with "node"
 for ID in 1 2 3
 do
     maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" \
-     storage="main:25(pool1),ceph:100(pool1)" hostname="metal-${ID}"
-	SYSID=$(maas admin machines read | jq -r --arg MACHINE "metal-${ID}" '.[] 
+     storage="main:25(pool1),ceph:100(pool1)" hostname="node-${ID}"
+	SYSID=$(maas admin machines read | jq -r --arg MACHINE "node-${ID}" '.[] 
     | select(."hostname"==$MACHINE) 
     | .["system_id"]' | tr -d '"')
-    maas admin tag update-nodes "metal" add=$SYSID
+    maas admin tag update-nodes "node" add=$SYSID
 done
 
 
 ### Juju setup (note, this section requires manual intervention)
 cd ~
 sudo snap install juju --classic
-sed -i "s/IP_ADDRESS/$IP_ADDRESS/" maas-baremetal-k8s-tutorial/maas-cloud.yaml
-juju add-cloud --local maas-cloud maas-baremetal-k8s-tutorial/maas-cloud.yaml
+sed -i "s/IP_ADDRESS/$IP_ADDRESS/" maas-lxd/maas-cloud.yaml
+juju add-cloud --local maas-cloud maas-lxd/maas-cloud.yaml
 juju add-credential maas-cloud
 juju clouds --local
 juju credentials
@@ -99,8 +99,7 @@ juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 # fire up the juju gui to view the fun
 # if it's a remote machine, you can use an SSH tunnel to get access to it:
 # e.g. ssh ubuntu@x.x.x.x -L8080:10.10.10.2:17070
-juju dashboard
-# get coffee
+# juju dashboard
 
 # check jujus view of machines
 juju machines
@@ -121,7 +120,7 @@ juju machines
 # deploy ceph-mon to LXD VMs inside our metal machines
 juju deploy -n 3 ceph-mon --to lxd:0,lxd:1,lxd:2
 # deploy ceph-osd directly to the machines
-juju deploy --config maas-baremetal-k8s-tutorial/ceph-osd.yaml cs:ceph-osd -n 3 --to 0,1,2
+juju deploy --config maas-lxd/ceph-osd.yaml cs:ceph-osd -n 3 --to 0,1,2
 # relate ceph-mon and ceph-osd
 juju add-relation ceph-mon ceph-osd
 
@@ -148,82 +147,78 @@ juju add-k8s my-k8s
 juju bootstrap my-k8s
 juju controllers
 
+# add a kubernetes-worker
+juju add-unit kubernetes-worker --to 2
+
 ### Deploy a test application on K8s cluster
 
 # Create a model in juju, which creates a namespace in K8s
-juju add-model hello-kubecon
+# juju add-model hello-kubecon
 
 # Deploy the charm "hello-kubecon", and set a hostname for the ingress
-juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
+# juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
 
 # Deploy the ingress integrator - this is a helper to setup the ingress
-juju deploy nginx-ingress-integrator ingress
+# juju deploy nginx-ingress-integrator ingress
 
 # trust the ingress (it needs cluster credentials to make changes)
-juju trust ingress --scope=cluster
+# juju trust ingress --scope=cluster
 
 # Relate our app to the ingress - this causes the ingress to be setup
-juju relate hello-kubecon ingress
+# juju relate hello-kubecon ingress
 
 # Explore the setup 
-kubectl describe ingress -n hello-kubecon
-kubectl get svc -n hello-kubecon
-kubectl describe svc hello-kubecon-service -n hello-kubecon
-kubectl get pods -n hello-kubecon
+# kubectl describe ingress -n hello-kubecon
+# kubectl get svc -n hello-kubecon
+# kubectl describe svc hello-kubecon-service -n hello-kubecon
+# kubectl get pods -n hello-kubecon
 
 # Lastly, in order to be able to reach the service from outside our host machine,
 # we can use port forwarding. Replace 10.10.10.5 with the IP seen on the ingress.
-sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
- --dport 8000 -j DNAT --to-destination 10.10.10.5:80
+# sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 --dport 8000 -j DNAT --to-destination 10.10.10.5:80
 # if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
 # Now you should be able to open a browser and navigate to http://$IP_ADDRESS:8000
-
 
 # scale our kubernetes cluster - find a machine 
 # Avoid kubernetes-master or existing kubernetes-worker machines
 # https://discourse.charmhub.io/t/scaling-applications/1075
-juju switch maas-cloud-default
-juju status
-
-# add a kubernetes-worker
-juju add-unit kubernetes-worker --to 2
+# juju switch maas-cloud-default
+# juju status
 
 # add another kubecon unit
-juju switch my-k8s
-juju add-unit -n 1 hello-kubecon
-juju status
+# juju switch my-k8s
+# juju add-unit -n 1 hello-kubecon
+# juju status
 
 # what happened to the ingress?
-kubectl get ingress -n hello-kubecon
-
-# exercise for the reader - iptables round robin or MetalLB:)
+# kubectl get ingress -n hello-kubecon
 
 # scale down hello-kubecon
-juju remove-unit --num-units 1  hello-kubecon
+# juju remove-unit --num-units 1  hello-kubecon
 
 # scaledown kubernetes
-juju switch maas-cloud-default 
-juju remove-unit kubernetes-worker/1
-juju status
+# juju switch maas-cloud-default 
+# juju remove-unit kubernetes-worker/1
+# juju status
 
 # if you want to test destroying your hello-kubecon:
-juju switch my-k8s
-juju destroy-model hello-kubecon --release-storage
+# juju switch my-k8s
+# juju destroy-model hello-kubecon --release-storage
 
 # if you want to destroy your kubenetes controller for juju
-juju switch maas-cloud-default
-juju destroy-controller my-k8s
+# juju switch maas-cloud-default
+# juju destroy-controller my-k8s
 
 # if you want to remove your k8s cluster:
-juju switch maas-cloud-default
-juju remove-application kubernetes-master kubernetes-worker etcd flannel easyrsa
+# juju switch maas-cloud-default
+# juju remove-application kubernetes-master kubernetes-worker etcd flannel easyrsa
 
 # if you want to remove ceph
-juju switch maas-cloud-default
-juju remove-application ceph-mon ceph-osd
+# juju switch maas-cloud-default
+# juju remove-application ceph-mon ceph-osd
 
 # To clean up everything:
-juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
+# juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
 # And the machines created in MAAS can be deleted easily in the MAAS GUI.
 
 ### Reference materials notes
