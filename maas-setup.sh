@@ -62,7 +62,7 @@ maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
 maas admin tags create name=juju-controller comment='This tag should to machines that will be used as juju controllers'
 maas admin tags create name=node comment='This tag should to machines that will be used as hosts'
 
-### creating VMs for Juju controller and our "bare metal"
+### creating VMs for Juju controller and nodes
 
 # add a VM for the juju controller with minimal memory
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=4096 architecture="amd64/generic" \
